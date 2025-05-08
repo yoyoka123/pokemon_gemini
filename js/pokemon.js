@@ -59,7 +59,8 @@ class PokemonManager {
         // 存储游戏实例的引用，用于获取相机位置
         this.game = null;
         
-        this.loadPokemons();
+        // 初始化加载器
+        this.loader = new THREE.GLTFLoader();
         
         // 添加调试信息
         console.log("宝可梦管理器初始化完成");
@@ -83,31 +84,24 @@ class PokemonManager {
         return new THREE.Vector3(0, 0, 0);
     }
     
-    loadPokemons() {
-        // 加载所有宝可梦模型但不立即添加到场景
-        if (!THREE.GLTFLoader) {
-            console.error("GLTFLoader未定义，请确保已正确加载THREE.js库");
+    // 使用预加载的模型创建宝可梦
+    createPokemonsFromPreloadedModels() {
+        console.log("从预加载的模型创建宝可梦实例...");
+        
+        if (!this.game || !this.game.modelLoader) {
+            console.error("未找到modelLoader，无法创建宝可梦");
             return;
         }
         
-        this.loader = new THREE.GLTFLoader();
-        
-        let loadedCount = 0;
-        const totalModels = this.pokemonData.length;
-        
         this.pokemonData.forEach(data => {
-            console.log(`开始加载宝可梦模型: ${data.name} (${data.model})`);
-            
-            // 尝试加载GLTF模型
-            this.loader.load(
-                data.model, 
-                (gltf) => {
-                    console.log(`成功加载宝可梦模型: ${data.name}`);
-                    
+            // 从ModelLoader中获取预加载的模型
+            this.game.modelLoader.loadModel(data.model, (model) => {
+                if (model) {
+                    // 创建宝可梦实例
                     const pokemon = new Pokemon(
                         data.id,
                         data.name,
-                        gltf.scene,
+                        model,
                         data.scale,
                         this.scene,
                         false,
@@ -115,14 +109,8 @@ class PokemonManager {
                     );
                     
                     this.pokemons.push(pokemon);
-                    loadedCount++;
-                    this.checkAndSpawnInitialPokemons(loadedCount, totalModels);
-                },
-                (xhr) => {
-                    console.log(`${data.name} 加载进度: ${Math.round(xhr.loaded / xhr.total * 100)}%`);
-                },
-                (error) => {
-                    console.error(`加载宝可梦模型失败 ${data.name}:`, error);
+                    console.log(`创建宝可梦: ${data.name}`);
+                } else {
                     console.log(`为 ${data.name} 创建备用模型`);
                     
                     // 创建一个备用模型 - 彩色立方体
@@ -137,26 +125,14 @@ class PokemonManager {
                     );
                     
                     this.pokemons.push(pokemon);
-                    loadedCount++;
-                    this.checkAndSpawnInitialPokemons(loadedCount, totalModels);
                 }
-            );
+                
+                // 当所有宝可梦都创建完成时，开始生成宝可梦
+                if (this.pokemons.length === this.pokemonData.length) {
+                    this.fillPokemonPool();
+                }
+            });
         });
-    }
-    
-    // 辅助方法：检查是否应该生成初始宝可梦
-    checkAndSpawnInitialPokemons(loadedCount, totalModels) {
-        // 当加载了足够多的宝可梦时，开始生成多个宝可梦
-        if (loadedCount >= 15 && this.activePokemons.length < this.maxActivePokemons) {
-            // 生成初始的宝可梦群
-            this.fillPokemonPool();
-        }
-        
-        // 当所有模型加载完成后，确保有足够的活跃宝可梦
-        if (loadedCount === totalModels) {
-            console.log("所有宝可梦加载完成，确保有足够的活跃宝可梦");
-            this.fillPokemonPool();
-        }
     }
     
     // 填充宝可梦池，直到达到最大数量
