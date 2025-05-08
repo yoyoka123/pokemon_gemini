@@ -1,0 +1,36 @@
+❌ 下载失败: //raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF-Binary/Duck.glb
+❌ 下载失败: //raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Avocado/glTF-Binary/Avocado.glb
+❌ 下载失败: //raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMilkTruck/glTF-Binary/CesiumMilkTruck.glb
+✅ 成功下载: bulbasaur.glb
+✅ 成功下载: charmander.glb
+✅ 成功下载: squirtle.glb
+✅ 成功下载: pikachu.glb
+✅ 成功下载: eevee.glb
+✅ 成功下载: jigglypuff.glb
+✅ 成功下载: ivysaur.glb
+✅ 成功下载: venusaur.glb
+✅ 成功下载: charmeleon.glb
+✅ 成功下载: charizard.glb
+✅ 成功下载: wartortle.glb
+✅ 成功下载: blastoise.glb
+✅ 成功下载: raichu.glb
+✅ 成功下载: vaporeon.glb
+✅ 成功下载: jolteon.glb
+✅ 成功下载: flareon.glb
+✅ 成功下载: snivy.glb
+✅ 成功下载: emolga.glb
+✅ 成功下载: pancham.glb
+✅ 成功下载: tyrunt.glb
+✅ 创建精灵球: models/pokeball.glb (使用 duck.glb 作为基础)
+⚠️ 删除无效模型: models/Flamingo.glb (14B)
+⚠️ 删除无效模型: models/articuno.glb (14B)
+⚠️ 删除无效模型: models/beedrill.glb (14B)
+⚠️ 删除无效模型: models/butterfree.glb (14B)
+⚠️ 删除无效模型: models/dragonite.glb (14B)
+⚠️ 删除无效模型: models/golbat.glb (14B)
+⚠️ 删除无效模型: models/moltres.glb (14B)
+⚠️ 删除无效模型: models/pidgeot.glb (14B)
+⚠️ 删除无效模型: models/pidgeotto.glb (14B)
+⚠️ 删除无效模型: models/pidgey.glb (14B)
+⚠️ 删除无效模型: models/zapdos.glb (14B)
+⚠️ 删除无效模型: models/zubat.glb (14B)
