@@ -46,22 +46,10 @@
         <div id="capture-message" class="hidden"></div>
     </div>
     
-    <!-- Three.js库 -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/PointerLockControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
-    
-    <!-- 游戏脚本 -->
-    <script src="js/models.js"></script>
-    <script src="js/world.js"></script>
-    <script src="js/player.js"></script>
-    <script src="js/pokemon.js"></script>
-    <script src="js/bag.js"></script>
-    <script src="js/game.js"></script>
-
+    <!-- 资源加载器脚本 -->
     <script>
         // 资源加载状态跟踪
-        const resourceTracker = {
+        window.resourceTracker = {
             totalResources: 0,  // 总资源数
             loadedResources: 0, // 已加载资源数
             loadingComplete: false, // 是否完成加载
@@ -123,6 +111,9 @@
             }
         };
 
+        // 设置默认资源数量，确保进度条能正常工作
+        window.resourceTracker.setTotalResources(40);
+        
         // 检查脚本是否正确加载
         window.addEventListener('DOMContentLoaded', () => {
             console.log("DOM内容已加载，检查依赖项...");
@@ -141,9 +132,24 @@
             
             console.log("依赖项检查完成，开始游戏初始化");
             
-            // 将全局资源跟踪器添加到window对象，以便游戏脚本访问
-            window.resourceTracker = resourceTracker;
+            // 标记基础依赖已加载完成
+            window.resourceTracker.resourceLoaded("Three.js库");
+            window.resourceTracker.resourceLoaded("GLTFLoader");
+            window.resourceTracker.resourceLoaded("DOM内容");
         });
     </script>
+    
+    <!-- Three.js库 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/PointerLockControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
+    
+    <!-- 游戏脚本 -->
+    <script src="js/models.js"></script>
+    <script src="js/world.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/pokemon.js"></script>
+    <script src="js/bag.js"></script>
+    <script src="js/game.js"></script>
 </body>
 </html> 

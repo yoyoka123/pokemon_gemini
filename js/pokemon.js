@@ -104,6 +104,11 @@ class PokemonManager {
         let loadedCount = 0;
         const totalModels = this.pokemonData.length;
         
+        // 如果定义了加载回调，先报告即将加载的模型总数
+        if (this.loadingCallback) {
+            console.log(`准备加载 ${totalModels} 个宝可梦模型`);
+        }
+        
         this.pokemonData.forEach(data => {
             console.log(`开始加载宝可梦模型: ${data.name} (${data.model})`);
             
@@ -134,7 +139,10 @@ class PokemonManager {
                     this.checkAndSpawnInitialPokemons(loadedCount, totalModels);
                 },
                 (xhr) => {
-                    console.log(`${data.name} 加载进度: ${Math.round(xhr.loaded / xhr.total * 100)}%`);
+                    if (xhr.lengthComputable) {
+                        const percentComplete = Math.round(xhr.loaded / xhr.total * 100);
+                        console.log(`${data.name} 加载进度: ${percentComplete}%`);
+                    }
                 },
                 (error) => {
                     console.error(`加载宝可梦模型失败 ${data.name}:`, error);

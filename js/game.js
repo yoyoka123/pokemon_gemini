@@ -9,10 +9,10 @@ class Game {
     initialize() {
         // 初始化资源跟踪器
         if (window.resourceTracker) {
-            // 设置需要加载的总资源数量（宝可梦模型 + 纹理 + 其他资源）
-            // 这里我们预设一个数值，实际数量可以根据游戏中使用的资源动态计算
-            window.resourceTracker.setTotalResources(50);
-            window.resourceTracker.resourceLoaded("游戏初始化");
+            // 资源追踪已在index.html中设置，这里只需更新状态
+            window.resourceTracker.resourceLoaded("游戏初始化开始");
+        } else {
+            console.warn("资源跟踪器未定义，无法跟踪加载进度");
         }
     
         // 创建场景
@@ -62,12 +62,10 @@ class Game {
         // 设置加载回调
         if (window.resourceTracker) {
             this.pokemonManager.setLoadingCallback((progress, total) => {
-                // 计算每个宝可梦资源占总进度的权重
-                const pokemonWeight = 40; // 假设宝可梦模型占40个资源点
-                const progressStep = pokemonWeight / total;
+                console.log(`宝可梦加载进度: ${progress}/${total}`);
                 
-                // 更新资源跟踪器
-                window.resourceTracker.resourceLoaded(`宝可梦模型 ${progress}/${total}`);
+                // 标记一个宝可梦模型已加载
+                window.resourceTracker.resourceLoaded(`宝可梦模型 ${progress}`);
             });
         }
         
