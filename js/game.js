@@ -1,9 +1,112 @@
 // 游戏主逻辑
 class Game {
     constructor() {
+        // 设置加载状态
+        this.isResourcesLoaded = false;
+        this.modelLoader = new ModelLoader();
+        
+        // 初始化游戏但延迟启动
         this.initialize();
         this.setupEventListeners();
-        this.animate();
+        
+        // 预加载资源
+        this.preloadResources().then(() => {
+            // 资源加载完成后，开始动画循环
+            this.isResourcesLoaded = true;
+            this.animate();
+            
+            // 更新加载界面
+            this.updateLoadingScreen(100, "加载完成！点击屏幕开始游戏");
+            
+            console.log("所有游戏资源加载完成，游戏准备就绪");
+        });
+    }
+
+    // 预加载所有游戏资源
+    async preloadResources() {
+        console.log("开始预加载游戏资源...");
+        
+        // 更新加载界面为初始状态
+        this.updateLoadingScreen(5, "初始化游戏环境...");
+        
+        // 等待所有宝可梦模型加载完成
+        await this.preloadPokemonModels();
+        
+        // 加载纹理和其他资源
+        await this.preloadTextures();
+        
+        // 创建宝可梦实例
+        this.pokemonManager.createPokemonsFromPreloadedModels();
+        
+        // 加载完成
+        return Promise.resolve();
+    }
+    
+    // 预加载宝可梦模型
+    async preloadPokemonModels() {
+        return new Promise(resolve => {
+            const modelPaths = this.pokemonManager.pokemonData.map(data => data.model);
+            let loadedCount = 0;
+            const totalCount = modelPaths.length;
+            
+            this.updateLoadingScreen(10, `正在加载宝可梦模型 (0/${totalCount})...`);
+            
+            modelPaths.forEach(path => {
+                this.modelLoader.loadModel(path, () => {
+                    loadedCount++;
+                    const progress = 10 + (loadedCount / totalCount) * 60;
+                    this.updateLoadingScreen(progress, `正在加载宝可梦模型 (${loadedCount}/${totalCount})...`);
+                    
+                    if (loadedCount === totalCount) {
+                        resolve();
+                    }
+                });
+            });
+        });
+    }
+    
+    // 预加载纹理和其他资源
+    async preloadTextures() {
+        return new Promise(resolve => {
+            // 加载天空盒纹理
+            const skyboxTextures = [
+                "textures/skybox/px.jpg", "textures/skybox/nx.jpg",
+                "textures/skybox/py.jpg", "textures/skybox/ny.jpg",
+                "textures/skybox/pz.jpg", "textures/skybox/nz.jpg"
+            ];
+            
+            let loadedCount = 0;
+            const totalCount = skyboxTextures.length;
+            
+            this.updateLoadingScreen(70, "正在加载世界纹理...");
+            
+            skyboxTextures.forEach(path => {
+                this.modelLoader.loadTexture(path, () => {
+                    loadedCount++;
+                    const progress = 70 + (loadedCount / totalCount) * 20;
+                    this.updateLoadingScreen(progress, `正在加载世界纹理 (${loadedCount}/${totalCount})...`);
+                    
+                    if (loadedCount === totalCount) {
+                        // 在延迟后完成加载，以确保一切准备就绪
+                        setTimeout(resolve, 500);
+                    }
+                });
+            });
+        });
+    }
+    
+    // 更新加载屏幕
+    updateLoadingScreen(progress, message) {
+        const loadingBar = document.getElementById('loading-bar');
+        const loadingMessage = document.querySelector('#loading-screen h2');
+        
+        if (loadingBar) {
+            loadingBar.style.width = `${progress}%`;
+        }
+        
+        if (loadingMessage) {
+            loadingMessage.textContent = message;
+        }
     }
 
     initialize() {
@@ -69,15 +172,6 @@ class Game {
         bagElement.classList.add('hidden');
         hudElement.style.display = 'none';
         
-        // 移除加载屏幕
-        const loadingScreen = document.getElementById('loading-screen');
-        if (loadingScreen) {
-            loadingScreen.style.opacity = '0';
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-            }, 500);
-        }
-        
         // 初始化世界块
         this.world.updateChunks(this.camera.position);
     }
@@ -85,8 +179,19 @@ class Game {
     setupEventListeners() {
         // 锁定鼠标点击事件
         this.renderer.domElement.addEventListener('click', () => {
-            if (!this.gameStarted) {
-                this.controls.lock();
+            // 只有资源加载完成后才允许开始游戏
+            if (this.isResourcesLoaded && !this.gameStarted) {
+                // 隐藏加载屏幕并锁定控制
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                        this.controls.lock();
+                    }, 500);
+                } else {
+                    this.controls.lock();
+                }
             }
         });
 
