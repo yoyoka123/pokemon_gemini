@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D宝可梦世界</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="loading-screen">
+        <div class="loading-content">
+            <h2>正在加载宝可梦世界...</h2>
+            <div class="loading-bar-container">
+                <div id="loading-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <div id="hud" style="display: none;">
+            <div id="health-bar">
+                <div class="bar-label">宝可梦生命值</div>
+                <div class="bar-container">
+                    <div id="pokemon-health" class="bar"></div>
+                </div>
+            </div>
+            <div id="controls-info">
+                <p>鼠标左键: 攻击</p>
+                <p>鼠标右键: 投掷精灵球</p>
+                <p>B键: 打开背包</p>
+            </div>
+        </div>
+        
+        <!-- 确保背包初始状态为隐藏 -->
+        <div id="bag" class="hidden" style="display: none;">
+            <div id="bag-header">
+                <h2>我的宝可梦</h2>
+                <button id="close-bag" type="button">关闭</button>
+            </div>
+            <div id="pokemon-list"></div>
+        </div>
+        <div id="capture-message" class="hidden"></div>
+    </div>
+    
+    <!-- Three.js库 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/PointerLockControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
+    
+    <!-- 游戏脚本 -->
+    <script src="js/models.js"></script>
+    <script src="js/world.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/pokemon.js"></script>
+    <script src="js/bag.js"></script>
+    <script src="js/game.js"></script>
+
+    <script>
+        // 检查脚本是否正确加载
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM内容已加载，检查依赖项...");
+            
+            // 检查Three.js是否加载
+            if (typeof THREE === 'undefined') {
+                alert('错误：无法加载Three.js库。请检查您的网络连接。');
+                return;
+            }
+            
+            // 检查GLTFLoader是否加载
+            if (typeof THREE.GLTFLoader === 'undefined') {
+                alert('错误：无法加载GLTFLoader。请检查您的网络连接。');
+                return;
+            }
+            
+            // 隐藏加载屏幕
+            const loadingScreen = document.getElementById('loading-screen');
+            setTimeout(() => {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }, 1000);
+            
+            console.log("依赖项检查完成，游戏已加载");
+        });
+    </script>
+</body>
+</html> 
