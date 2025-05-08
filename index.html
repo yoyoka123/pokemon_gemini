@@ -10,10 +10,13 @@
 <body>
     <div id="loading-screen">
         <div class="loading-content">
+            <img src="textures/pokeball.png" alt="精灵球" class="loading-icon">
             <h2>正在加载宝可梦世界...</h2>
             <div class="loading-bar-container">
                 <div id="loading-bar"></div>
             </div>
+            <div id="loading-text">正在加载基础资源 (0%)</div>
+            <div id="loading-status">请稍候，正在准备游戏世界...</div>
         </div>
     </div>
 
@@ -57,6 +60,69 @@
     <script src="js/game.js"></script>
 
     <script>
+        // 资源加载状态跟踪
+        const resourceTracker = {
+            totalResources: 0,  // 总资源数
+            loadedResources: 0, // 已加载资源数
+            loadingComplete: false, // 是否完成加载
+            
+            // 注册需要加载的资源数量
+            setTotalResources: function(count) {
+                this.totalResources = count;
+                console.log(`需要加载 ${count} 个资源`);
+                this.updateLoadingBar();
+            },
+            
+            // 标记一个资源加载完成
+            resourceLoaded: function(resourceName) {
+                this.loadedResources++;
+                console.log(`资源加载完成: ${resourceName || '未命名资源'} (${this.loadedResources}/${this.totalResources})`);
+                this.updateLoadingBar();
+                
+                // 检查是否所有资源都已加载
+                if (this.loadedResources >= this.totalResources && !this.loadingComplete) {
+                    this.loadingComplete = true;
+                    this.finishLoading();
+                }
+            },
+            
+            // 更新加载进度条
+            updateLoadingBar: function() {
+                const loadingBar = document.getElementById('loading-bar');
+                const loadingText = document.getElementById('loading-text');
+                const percentage = this.totalResources > 0 
+                    ? Math.min(Math.floor((this.loadedResources / this.totalResources) * 100), 100)
+                    : 0;
+                
+                loadingBar.style.width = `${percentage}%`;
+                loadingText.textContent = `正在加载游戏资源 (${percentage}%)`;
+                
+                if (percentage >= 100) {
+                    document.getElementById('loading-status').textContent = '加载完成，准备进入游戏！';
+                } else if (percentage >= 75) {
+                    document.getElementById('loading-status').textContent = '正在生成宝可梦...';
+                } else if (percentage >= 50) {
+                    document.getElementById('loading-status').textContent = '正在构建游戏世界...';
+                } else if (percentage >= 25) {
+                    document.getElementById('loading-status').textContent = '正在加载宝可梦模型...';
+                }
+            },
+            
+            // 完成加载，隐藏加载屏幕
+            finishLoading: function() {
+                console.log("所有资源加载完成，准备开始游戏！");
+                
+                // 给玩家一些时间看到100%加载完成的状态
+                setTimeout(() => {
+                    const loadingScreen = document.getElementById('loading-screen');
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
+                }, 800);
+            }
+        };
+
         // 检查脚本是否正确加载
         window.addEventListener('DOMContentLoaded', () => {
             console.log("DOM内容已加载，检查依赖项...");
@@ -73,16 +139,10 @@
                 return;
             }
             
-            // 隐藏加载屏幕
-            const loadingScreen = document.getElementById('loading-screen');
-            setTimeout(() => {
-                loadingScreen.style.opacity = '0';
-                setTimeout(() => {
-                    loadingScreen.style.display = 'none';
-                }, 500);
-            }, 1000);
+            console.log("依赖项检查完成，开始游戏初始化");
             
-            console.log("依赖项检查完成，游戏已加载");
+            // 将全局资源跟踪器添加到window对象，以便游戏脚本访问
+            window.resourceTracker = resourceTracker;
         });
     </script>
 </body>

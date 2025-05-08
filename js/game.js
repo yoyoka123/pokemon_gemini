@@ -1,142 +1,56 @@
 // 游戏主逻辑
 class Game {
     constructor() {
-        // 设置加载状态
-        this.isResourcesLoaded = false;
-        this.modelLoader = new ModelLoader();
-        
-        // 初始化游戏但延迟启动
         this.initialize();
         this.setupEventListeners();
-        
-        // 预加载资源
-        this.preloadResources().then(() => {
-            // 资源加载完成后，开始动画循环
-            this.isResourcesLoaded = true;
-            this.animate();
-            
-            // 更新加载界面
-            this.updateLoadingScreen(100, "加载完成！点击屏幕开始游戏");
-            
-            console.log("所有游戏资源加载完成，游戏准备就绪");
-        });
-    }
-
-    // 预加载所有游戏资源
-    async preloadResources() {
-        console.log("开始预加载游戏资源...");
-        
-        // 更新加载界面为初始状态
-        this.updateLoadingScreen(5, "初始化游戏环境...");
-        
-        // 等待所有宝可梦模型加载完成
-        await this.preloadPokemonModels();
-        
-        // 加载纹理和其他资源
-        await this.preloadTextures();
-        
-        // 创建宝可梦实例
-        this.pokemonManager.createPokemonsFromPreloadedModels();
-        
-        // 加载完成
-        return Promise.resolve();
-    }
-    
-    // 预加载宝可梦模型
-    async preloadPokemonModels() {
-        return new Promise(resolve => {
-            const modelPaths = this.pokemonManager.pokemonData.map(data => data.model);
-            let loadedCount = 0;
-            const totalCount = modelPaths.length;
-            
-            this.updateLoadingScreen(10, `正在加载宝可梦模型 (0/${totalCount})...`);
-            
-            modelPaths.forEach(path => {
-                this.modelLoader.loadModel(path, () => {
-                    loadedCount++;
-                    const progress = 10 + (loadedCount / totalCount) * 60;
-                    this.updateLoadingScreen(progress, `正在加载宝可梦模型 (${loadedCount}/${totalCount})...`);
-                    
-                    if (loadedCount === totalCount) {
-                        resolve();
-                    }
-                });
-            });
-        });
-    }
-    
-    // 预加载纹理和其他资源
-    async preloadTextures() {
-        return new Promise(resolve => {
-            // 加载天空盒纹理
-            const skyboxTextures = [
-                "textures/skybox/px.jpg", "textures/skybox/nx.jpg",
-                "textures/skybox/py.jpg", "textures/skybox/ny.jpg",
-                "textures/skybox/pz.jpg", "textures/skybox/nz.jpg"
-            ];
-            
-            let loadedCount = 0;
-            const totalCount = skyboxTextures.length;
-            
-            this.updateLoadingScreen(70, "正在加载世界纹理...");
-            
-            skyboxTextures.forEach(path => {
-                this.modelLoader.loadTexture(path, () => {
-                    loadedCount++;
-                    const progress = 70 + (loadedCount / totalCount) * 20;
-                    this.updateLoadingScreen(progress, `正在加载世界纹理 (${loadedCount}/${totalCount})...`);
-                    
-                    if (loadedCount === totalCount) {
-                        // 在延迟后完成加载，以确保一切准备就绪
-                        setTimeout(resolve, 500);
-                    }
-                });
-            });
-        });
-    }
-    
-    // 更新加载屏幕
-    updateLoadingScreen(progress, message) {
-        const loadingBar = document.getElementById('loading-bar');
-        const loadingMessage = document.querySelector('#loading-screen h2');
-        
-        if (loadingBar) {
-            loadingBar.style.width = `${progress}%`;
-        }
-        
-        if (loadingMessage) {
-            loadingMessage.textContent = message;
-        }
+        this.animate();
     }
 
     initialize() {
+        // 初始化资源跟踪器
+        if (window.resourceTracker) {
+            // 设置需要加载的总资源数量（宝可梦模型 + 纹理 + 其他资源）
+            // 这里我们预设一个数值，实际数量可以根据游戏中使用的资源动态计算
+            window.resourceTracker.setTotalResources(50);
+            window.resourceTracker.resourceLoaded("游戏初始化");
+        }
+    
         // 创建场景
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x87CEEB); // 天空蓝色
+        if (window.resourceTracker) window.resourceTracker.resourceLoaded("场景");
 
         // 创建相机
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.camera.position.set(0, 1.6, 0); // 人眼高度
+        if (window.resourceTracker) window.resourceTracker.resourceLoaded("相机");
 
         // 创建渲染器
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.shadowMap.enabled = true;
         document.getElementById('game-container').appendChild(this.renderer.domElement);
+        if (window.resourceTracker) window.resourceTracker.resourceLoaded("渲染器");
 
         // 添加十字准星
         const crosshair = document.createElement('div');
         crosshair.className = 'crosshair';
         document.getElementById('game-container').appendChild(crosshair);
+        if (window.resourceTracker) window.resourceTracker.resourceLoaded("界面元素");
 
         // 设置第一人称控制
         this.controls = new THREE.PointerLockControls(this.camera, this.renderer.domElement);
+        if (window.resourceTracker) window.resourceTracker.resourceLoaded("控制器");
         
         // 初始化世界、玩家、宝可梦和背包
         this.world = new World(this.scene);
         this.world.createTerrain(); // 创建天空盒
+        if (window.resourceTracker) window.resourceTracker.resourceLoaded("游戏世界");
         
         this.player = new Player(this.camera, this.controls, this.scene);
+        if (window.resourceTracker) window.resourceTracker.resourceLoaded("玩家");
+        
+        // 初始化宝可梦管理器
         this.pokemonManager = new PokemonManager(this.scene);
         
         // 将宝可梦管理器添加到场景的userData中，以便Pokemon实例可以访问
@@ -145,7 +59,20 @@ class Game {
         // 设置宝可梦管理器的game引用为当前Game实例
         this.pokemonManager.setGame(this);
         
+        // 设置加载回调
+        if (window.resourceTracker) {
+            this.pokemonManager.setLoadingCallback((progress, total) => {
+                // 计算每个宝可梦资源占总进度的权重
+                const pokemonWeight = 40; // 假设宝可梦模型占40个资源点
+                const progressStep = pokemonWeight / total;
+                
+                // 更新资源跟踪器
+                window.resourceTracker.resourceLoaded(`宝可梦模型 ${progress}/${total}`);
+            });
+        }
+        
         this.bag = new Bag();
+        if (window.resourceTracker) window.resourceTracker.resourceLoaded("背包");
 
         // 添加环境光和定向光
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -157,6 +84,7 @@ class Game {
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
         this.scene.add(directionalLight);
+        if (window.resourceTracker) window.resourceTracker.resourceLoaded("灯光");
 
         // 游戏状态
         this.gameStarted = false;
@@ -174,24 +102,14 @@ class Game {
         
         // 初始化世界块
         this.world.updateChunks(this.camera.position);
+        if (window.resourceTracker) window.resourceTracker.resourceLoaded("世界区块");
     }
 
     setupEventListeners() {
         // 锁定鼠标点击事件
         this.renderer.domElement.addEventListener('click', () => {
-            // 只有资源加载完成后才允许开始游戏
-            if (this.isResourcesLoaded && !this.gameStarted) {
-                // 隐藏加载屏幕并锁定控制
-                const loadingScreen = document.getElementById('loading-screen');
-                if (loadingScreen) {
-                    loadingScreen.style.opacity = '0';
-                    setTimeout(() => {
-                        loadingScreen.style.display = 'none';
-                        this.controls.lock();
-                    }, 500);
-                } else {
-                    this.controls.lock();
-                }
+            if (!this.gameStarted) {
+                this.controls.lock();
             }
         });
 
