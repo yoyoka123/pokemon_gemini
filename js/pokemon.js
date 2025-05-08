@@ -195,10 +195,11 @@ class PokemonManager {
         const currentTime = Date.now();
         
         // 获取玩家位置和朝向，用于调试
-        const camera = this.scene.getObjectByProperty('type', 'PerspectiveCamera');
         let playerPosition = new THREE.Vector3(0, 0, 0);
         let playerRotation = 0;
         
+        // 从scene.userData中获取camera对象，这是由game.js设置的
+        const camera = this.scene.userData.camera;
         if (camera) {
             playerPosition = camera.position.clone();
             playerRotation = camera.rotation.y;
@@ -207,6 +208,8 @@ class PokemonManager {
             if (this.debugMode && currentTime % 5000 < 20) { // 每5秒左右输出一次
                 console.log(`玩家位置: X=${playerPosition.x.toFixed(2)}, Y=${playerPosition.y.toFixed(2)}, Z=${playerPosition.z.toFixed(2)}, 朝向=${(playerRotation * 180 / Math.PI).toFixed(2)}度`);
             }
+        } else {
+            console.log("警告: 无法从scene.userData获取camera对象");
         }
         
         // 强制保持活跃宝可梦数量
@@ -304,9 +307,10 @@ class PokemonManager {
     // 在指定位置生成特定宝可梦
     spawnPokemonAtPosition(pokemon, playerPosition) {
         // 计算玩家前方的位置
-        // 获取玩家的朝向（如果相机有朝向）
         let angle;
-        const camera = this.scene.getObjectByProperty('type', 'PerspectiveCamera');
+        
+        // 从scene.userData中获取camera对象
+        const camera = this.scene.userData.camera;
         
         // 尝试通过不同方式获取玩家朝向
         if (camera) {
@@ -387,11 +391,8 @@ class PokemonManager {
     
     spawnRandomPokemon() {
         // 使用更可靠的强制生成方法
-        const camera = this.scene.getObjectByProperty('type', 'PerspectiveCamera');
-        let playerPosition = new THREE.Vector3(0, 0, 0);
-        if (camera) {
-            playerPosition = camera.position.clone();
-        }
+        const camera = this.scene.userData.camera;
+        let playerPosition = camera ? camera.position.clone() : new THREE.Vector3(0, 1.6, 0);
         
         this.spawnPokemonForced(playerPosition);
     }
@@ -423,12 +424,9 @@ class PokemonManager {
             console.log(`移除宝可梦: ${pokemon.name}`);
             console.log(`剩余活跃宝可梦数量: ${this.activePokemons.length}`);
             
-            // 获取玩家位置
-            const camera = this.scene.getObjectByProperty('type', 'PerspectiveCamera');
-            let playerPosition = new THREE.Vector3(0, 0, 0);
-            if (camera) {
-                playerPosition = camera.position.clone();
-            }
+            // 获取玩家位置 - 使用scene.userData中的camera
+            const camera = this.scene.userData.camera;
+            let playerPosition = camera ? camera.position.clone() : new THREE.Vector3(0, 1.6, 0);
             
             // 立即在玩家周围重新生成一个新的宝可梦
             this.spawnNearPlayer(playerPosition);
