@@ -4,7 +4,7 @@ class PokemonManager {
         this.scene = scene;
         this.pokemons = [];
         this.activePokemons = []; // 改为数组，支持多个活跃宝可梦
-        this.maxActivePokemons = 10; // 最大同时显示的宝可梦数量
+        this.maxActivePokemons = 20; // 将最大同时显示的宝可梦数量从10增加到20
         this.pokemonData = [
             // 第一世代 - 御三家及其进化链
             { id: 1, name: "妙蛙种子", model: "models/bulbasaur.glb", scale: 0.5, color: 0x7CFC00 },
@@ -78,7 +78,7 @@ class PokemonManager {
             { id: 45, name: "霸王花", model: "models/vileplume.glb", scale: 0.5, color: 0x006400 }
         ];
         
-        this.spawnInterval = 5000; // 缩短生成间隔到5秒
+        this.spawnInterval = 3000; // 将生成间隔从5秒减少到3秒
         this.lastSpawnTime = Date.now();
         
         this.loadPokemons();
@@ -248,7 +248,7 @@ class PokemonManager {
         }
         
         // 在玩家周围的一定范围内随机生成宝可梦
-        const distance = 60 + Math.random() * 30; // 距离玩家60-90单位
+        const distance = 30 + Math.random() * 30; // 减少距离为30-60单位（原来是60-90单位）
         const angle = Math.random() * Math.PI * 2; // 随机角度
         
         const x = playerPosition.x + Math.cos(angle) * distance;

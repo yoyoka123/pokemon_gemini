@@ -40,7 +40,7 @@ class Player {
                     break;
                 case 'Space':
                     if (this.canJump) {
-                        this.velocity.y = 3.5;
+                        this.velocity.y = 2.0;
                         this.canJump = false;
                     }
                     break;
