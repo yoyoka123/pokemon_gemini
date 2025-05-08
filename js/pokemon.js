@@ -213,7 +213,7 @@ class PokemonManager {
             pokemon.update();
             
             // 检查宝可梦是否距离玩家太远
-            if (pokemon.isVisible && pokemon.model.position.distanceTo(playerPosition) > 100) {
+            if (pokemon.isVisible && pokemon.model.position.distanceTo(playerPosition) > 30) {
                 // 移除该宝可梦
                 this.removePokemon(pokemon);
                 
@@ -245,8 +245,8 @@ class PokemonManager {
         }
         
         // 在玩家周围的一定范围内随机生成宝可梦，确保玩家能看到
-        const minDistance = 20; // 最小距离
-        const maxDistance = 50; // 最大距离
+        const minDistance = 10; // 最小距离，从20减少到10
+        const maxDistance = 25; // 最大距离，从50减少到25
         const distance = minDistance + Math.random() * (maxDistance - minDistance);
         const angle = Math.random() * Math.PI * 2; // 随机角度
         
