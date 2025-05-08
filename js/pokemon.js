@@ -17,18 +17,17 @@ class PokemonManager {
             { id: 8, name: "卡咪龟", model: "models/wartortle.glb", scale: 0.6, color: 0x4169E1 },
             { id: 9, name: "水箭龟", model: "models/blastoise.glb", scale: 0.7, color: 0x000080 },
 
-            // 常见宝可梦
+            // 常见宝可梦 - 移除了没有真实模型的宝可梦
             { id: 10, name: "绿毛虫", model: "models/caterpie.glb", scale: 0.3, color: 0x90EE90 },
             { id: 11, name: "铁甲蛹", model: "models/metapod.glb", scale: 0.3, color: 0x006400 },
-            { id: 12, name: "巴大蝶", model: "models/butterfree.glb", scale: 0.5, color: 0x9370DB },
+            // 巴大蝶 - 移除，没有真实模型
             { id: 13, name: "独角虫", model: "models/weedle.glb", scale: 0.3, color: 0x8B4513 },
             { id: 14, name: "铁壳蛹", model: "models/kakuna.glb", scale: 0.3, color: 0xDAA520 },
-            { id: 15, name: "大针蜂", model: "models/beedrill.glb", scale: 0.5, color: 0xFFD700 },
+            // 大针蜂 - 移除，没有真实模型
 
-            // 飞行系
-            { id: 16, name: "波波", model: "models/pidgey.glb", scale: 0.4, color: 0xDEB887 },
-            { id: 17, name: "比比鸟", model: "models/pidgeotto.glb", scale: 0.5, color: 0xD2B48C },
-            { id: 18, name: "大比鸟", model: "models/pidgeot.glb", scale: 0.6, color: 0xBC8F8F },
+            // 移除所有飞行系宝可梦，因为没有真实模型
+            // 波波、比比鸟、大比鸟已移除
+            
             { id: 19, name: "小拉达", model: "models/rattata.glb", scale: 0.3, color: 0x800080 },
             { id: 20, name: "拉达", model: "models/raticate.glb", scale: 0.4, color: 0x4B0082 },
 
@@ -58,24 +57,27 @@ class PokemonManager {
             { id: 135, name: "雷伊布", model: "models/jolteon.glb", scale: 0.5, color: 0xFFFF00 },
             { id: 136, name: "火伊布", model: "models/flareon.glb", scale: 0.5, color: 0xFF4500 },
 
-            // 传说中的宝可梦
-            { id: 144, name: "急冻鸟", model: "models/articuno.glb", scale: 0.7, color: 0x87CEEB },
-            { id: 145, name: "闪电鸟", model: "models/zapdos.glb", scale: 0.7, color: 0xFFD700 },
-            { id: 146, name: "火焰鸟", model: "models/moltres.glb", scale: 0.7, color: 0xFF4500 },
+            // 传说中的宝可梦 - 移除没有真实模型的宝可梦
+            // 急冻鸟、闪电鸟、火焰鸟已移除
             { id: 147, name: "迷你龙", model: "models/dratini.glb", scale: 0.4, color: 0x4169E1 },
             { id: 148, name: "哈克龙", model: "models/dragonair.glb", scale: 0.6, color: 0x000080 },
-            { id: 149, name: "快龙", model: "models/dragonite.glb", scale: 0.8, color: 0xFFA500 },
+            // 快龙已移除，没有真实模型
             { id: 150, name: "超梦", model: "models/mewtwo.glb", scale: 0.8, color: 0x800080 },
             { id: 151, name: "梦幻", model: "models/mew.glb", scale: 0.4, color: 0xFFB6C1 },
 
             // 额外的常见宝可梦
             { id: 39, name: "胖丁", model: "models/jigglypuff.glb", scale: 0.4, color: 0xFFC0CB },
             { id: 40, name: "胖可丁", model: "models/wigglytuff.glb", scale: 0.5, color: 0xFF69B4 },
-            { id: 41, name: "超音蝠", model: "models/zubat.glb", scale: 0.4, color: 0x483D8B },
-            { id: 42, name: "大嘴蝠", model: "models/golbat.glb", scale: 0.5, color: 0x4B0082 },
+            // 超音蝠、大嘴蝠已移除，没有真实模型
             { id: 43, name: "走路草", model: "models/oddish.glb", scale: 0.3, color: 0x32CD32 },
             { id: 44, name: "臭臭花", model: "models/gloom.glb", scale: 0.4, color: 0x228B22 },
-            { id: 45, name: "霸王花", model: "models/vileplume.glb", scale: 0.5, color: 0x006400 }
+            { id: 45, name: "霸王花", model: "models/vileplume.glb", scale: 0.5, color: 0x006400 },
+            
+            // 添加新的可用宝可梦
+            { id: 495, name: "藤蛇", model: "models/snivy.glb", scale: 0.5, color: 0x32CD32 },
+            { id: 587, name: "电飞鼠", model: "models/emolga.glb", scale: 0.4, color: 0xFFD700 },
+            { id: 674, name: "顽皮熊猫", model: "models/pancham.glb", scale: 0.5, color: 0x808080 },
+            { id: 696, name: "宝宝暴龙", model: "models/tyrunt.glb", scale: 0.6, color: 0xA52A2A }
         ];
         
         this.spawnInterval = 3000; // 将生成间隔从5秒减少到3秒
