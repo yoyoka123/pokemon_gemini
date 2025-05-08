@@ -2,15 +2,64 @@
 class World {
     constructor(scene) {
         this.scene = scene;
-        this.createTerrain();
-        this.addTrees();
-        this.addRocks();
-        this.createBoundaries();
+        
+        // 地图块设置
+        this.chunkSize = 100; // 每个地图块的大小
+        this.renderDistance = 2; // 玩家周围渲染的地图块距离
+        this.chunks = new Map(); // 存储已加载的地图块
+        this.chunkObjects = new Map(); // 存储每个地图块中的对象
+        
+        // 移除边界墙
+        // this.createBoundaries();
     }
 
-    createTerrain() {
+    // 根据玩家位置更新地图块
+    updateChunks(playerPosition) {
+        // 计算玩家所在的地图块坐标
+        const playerChunkX = Math.floor(playerPosition.x / this.chunkSize);
+        const playerChunkZ = Math.floor(playerPosition.z / this.chunkSize);
+        
+        // 需要加载的地图块范围
+        const minX = playerChunkX - this.renderDistance;
+        const maxX = playerChunkX + this.renderDistance;
+        const minZ = playerChunkZ - this.renderDistance;
+        const maxZ = playerChunkZ + this.renderDistance;
+        
+        // 记录需要保留的地图块
+        const chunksToKeep = new Set();
+        
+        // 加载新的地图块
+        for (let x = minX; x <= maxX; x++) {
+            for (let z = minZ; z <= maxZ; z++) {
+                const chunkKey = `${x},${z}`;
+                chunksToKeep.add(chunkKey);
+                
+                // 如果地图块未加载，则创建新的地图块
+                if (!this.chunks.has(chunkKey)) {
+                    this.createChunk(x, z);
+                }
+            }
+        }
+        
+        // 卸载不需要的地图块
+        for (const chunkKey of this.chunks.keys()) {
+            if (!chunksToKeep.has(chunkKey)) {
+                this.unloadChunk(chunkKey);
+            }
+        }
+    }
+    
+    // 创建新的地图块
+    createChunk(x, z) {
+        const chunkKey = `${x},${z}`;
+        console.log(`创建地图块: ${chunkKey}`);
+        
         // 创建地面
-        const groundGeometry = new THREE.PlaneGeometry(100, 100);
+        const chunkX = x * this.chunkSize;
+        const chunkZ = z * this.chunkSize;
+        
+        // 创建地面
+        const groundGeometry = new THREE.PlaneGeometry(this.chunkSize, this.chunkSize);
         const groundTexture = new THREE.TextureLoader().load('textures/grass.jpg');
         groundTexture.wrapS = THREE.RepeatWrapping;
         groundTexture.wrapT = THREE.RepeatWrapping;
@@ -22,13 +71,127 @@ class World {
             metalness: 0.2
         });
         
-        this.ground = new THREE.Mesh(groundGeometry, groundMaterial);
-        this.ground.rotation.x = -Math.PI / 2;
-        this.ground.receiveShadow = true;
-        this.scene.add(this.ground);
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.set(chunkX + this.chunkSize/2, 0, chunkZ + this.chunkSize/2);
+        ground.receiveShadow = true;
+        this.scene.add(ground);
         
+        // 存储地图块的对象
+        const chunkObjects = {
+            ground: ground,
+            trees: [],
+            rocks: []
+        };
+        
+        // 添加树木
+        const treeCount = 5 + Math.floor(Math.random() * 5); // 每个区块5-10棵树
+        for (let i = 0; i < treeCount; i++) {
+            // 在地图块内随机位置
+            const treeX = chunkX + Math.random() * this.chunkSize;
+            const treeZ = chunkZ + Math.random() * this.chunkSize;
+            
+            const tree = this.createSimpleTree();
+            tree.position.set(treeX, 0, treeZ);
+            this.scene.add(tree);
+            chunkObjects.trees.push(tree);
+        }
+        
+        // 添加岩石
+        const rockCount = 3 + Math.floor(Math.random() * 4); // 每个区块3-7块岩石
+        for (let i = 0; i < rockCount; i++) {
+            // 在地图块内随机位置
+            const rockX = chunkX + Math.random() * this.chunkSize;
+            const rockZ = chunkZ + Math.random() * this.chunkSize;
+            
+            const rock = this.createSimpleRock();
+            rock.position.set(rockX, 0, rockZ);
+            this.scene.add(rock);
+            chunkObjects.rocks.push(rock);
+        }
+        
+        // 存储地图块
+        this.chunks.set(chunkKey, { x, z });
+        this.chunkObjects.set(chunkKey, chunkObjects);
+        
+        return chunkObjects;
+    }
+    
+    // 卸载地图块
+    unloadChunk(chunkKey) {
+        console.log(`卸载地图块: ${chunkKey}`);
+        
+        if (this.chunkObjects.has(chunkKey)) {
+            const chunkObjects = this.chunkObjects.get(chunkKey);
+            
+            // 移除地面
+            if (chunkObjects.ground) {
+                this.scene.remove(chunkObjects.ground);
+                chunkObjects.ground.geometry.dispose();
+                chunkObjects.ground.material.dispose();
+            }
+            
+            // 移除树木
+            chunkObjects.trees.forEach(tree => {
+                this.scene.remove(tree);
+                this.disposeObject(tree);
+            });
+            
+            // 移除岩石
+            chunkObjects.rocks.forEach(rock => {
+                this.scene.remove(rock);
+                this.disposeObject(rock);
+            });
+            
+            // 从地图块列表中移除
+            this.chunks.delete(chunkKey);
+            this.chunkObjects.delete(chunkKey);
+        }
+    }
+    
+    // 释放对象及其子对象的资源
+    disposeObject(object) {
+        if (!object) return;
+        
+        if (object.children && object.children.length > 0) {
+            // 复制子对象数组以避免遍历时修改原数组
+            const children = [...object.children];
+            for (const child of children) {
+                this.disposeObject(child);
+            }
+        }
+        
+        if (object.geometry) object.geometry.dispose();
+        
+        if (object.material) {
+            if (Array.isArray(object.material)) {
+                for (const material of object.material) {
+                    this.disposeMaterial(material);
+                }
+            } else {
+                this.disposeMaterial(object.material);
+            }
+        }
+    }
+    
+    // 释放材质资源
+    disposeMaterial(material) {
+        if (!material) return;
+        
+        if (material.map) material.map.dispose();
+        if (material.lightMap) material.lightMap.dispose();
+        if (material.bumpMap) material.bumpMap.dispose();
+        if (material.normalMap) material.normalMap.dispose();
+        if (material.specularMap) material.specularMap.dispose();
+        if (material.envMap) material.envMap.dispose();
+        
+        material.dispose();
+    }
+    
+    // 保留天空盒创建方法
+    createTerrain() {
         // 添加天空盒
-        const skyboxGeometry = new THREE.BoxGeometry(500, 500, 500);
+        const skyboxGeometry = new THREE.BoxGeometry(2000, 2000, 2000);
         const skyboxMaterials = [];
         
         const skyboxTextures = [
@@ -51,71 +214,7 @@ class World {
         this.scene.add(skybox);
     }
 
-    addTrees() {
-        // 使用GLTF模型加载器加载树模型
-        const treeLoader = new THREE.GLTFLoader();
-        const treeCount = 10; // 减少树的数量以提高性能
-        let loadedTrees = 0;
-        
-        // 当模型加载失败时使用备用模型
-        const fallbackTree = () => {
-            console.log("使用备用树模型");
-            return this.createSimpleTree();
-        };
-        
-        // 添加树，随机分布
-        for (let i = 0; i < treeCount; i++) {
-            // 随机位置
-            const x = Math.random() * 80 - 40;
-            const z = Math.random() * 80 - 40;
-            
-            treeLoader.load('models/tree.glb', 
-                (gltf) => {
-                    const tree = gltf.scene;
-                    
-                    // 缩放模型
-                    tree.scale.set(0.5, 0.5, 0.5);
-                    tree.position.set(x, 0, z);
-                    
-                    // 给树木添加阴影
-                    tree.traverse((child) => {
-                        if (child.isMesh) {
-                            child.castShadow = true;
-                            child.receiveShadow = true;
-                        }
-                    });
-                    
-                    this.scene.add(tree);
-                    loadedTrees++;
-                    
-                    // 若所有模型都加载失败，则使用备用树
-                    if (loadedTrees === treeCount) {
-                        console.log("所有树模型加载完成");
-                    }
-                },
-                undefined,
-                (error) => {
-                    console.error("树模型加载失败", error);
-                    // 使用备用树模型
-                    const tree = fallbackTree();
-                    tree.position.set(x, 0, z);
-                    this.scene.add(tree);
-                    
-                    loadedTrees++;
-                }
-            );
-        }
-        
-        // 再添加一些备用树，确保场景足够丰富
-        for (let i = 0; i < 10; i++) {
-            const tree = this.createSimpleTree();
-            const x = Math.random() * 80 - 40;
-            const z = Math.random() * 80 - 40;
-            tree.position.set(x, 0, z);
-            this.scene.add(tree);
-        }
-    }
-    
+    // 保留创建树木的方法，但改为返回树木对象而不是直接添加到场景
     createSimpleTree() {
         const tree = new THREE.Group();
         
@@ -149,75 +248,6 @@ class World {
         tree.rotation.y = Math.random() * Math.PI * 2;
         
         return tree;
-    }
-
-    addRocks() {
-        // 使用GLTF模型加载器加载岩石模型
-        const rockLoader = new THREE.GLTFLoader();
-        const rockCount = 8; // 减少岩石数量以提高性能
-        let loadedRocks = 0;
-        
-        // 当模型加载失败时使用备用模型
-        const fallbackRock = () => {
-            console.log("使用备用岩石模型");
-            return this.createSimpleRock();
-        };
-        
-        // 添加岩石，随机分布
-        for (let i = 0; i < rockCount; i++) {
-            // 随机位置
-            const x = Math.random() * 80 - 40;
-            const z = Math.random() * 80 - 40;
-            
-            rockLoader.load('models/rock.glb', 
-                (gltf) => {
-                    const rock = gltf.scene;
-                    
-                    // 缩放模型
-                    const scale = 0.3 + Math.random() * 0.3;
-                    rock.scale.set(scale, scale, scale);
-                    rock.position.set(x, 0, z);
-                    
-                    // 随机旋转
-                    rock.rotation.y = Math.random() * Math.PI * 2;
-                    
-                    // 给岩石添加阴影
-                    rock.traverse((child) => {
-                        if (child.isMesh) {
-                            child.castShadow = true;
-                            child.receiveShadow = true;
-                        }
-                    });
-                    
-                    this.scene.add(rock);
-                    loadedRocks++;
-                    
-                    // 若所有模型都加载完成
-                    if (loadedRocks === rockCount) {
-                        console.log("所有岩石模型加载完成");
-                    }
-                },
-                undefined,
-                (error) => {
-                    console.error("岩石模型加载失败", error);
-                    // 使用备用岩石模型
-                    const rock = fallbackRock();
-                    rock.position.set(x, 0, z);
-                    this.scene.add(rock);
-                    
-                    loadedRocks++;
-                }
-            );
-        }
-        
-        // 再添加一些备用岩石，确保场景足够丰富
-        for (let i = 0; i < 7; i++) {
-            const rock = this.createSimpleRock();
-            const x = Math.random() * 80 - 40;
-            const z = Math.random() * 80 - 40;
-            rock.position.set(x, 0, z);
-            this.scene.add(rock);
-        }
     }
     
     createSimpleRock() {
@@ -273,45 +303,5 @@ class World {
         rock.rotation.y = Math.random() * Math.PI * 2;
         
         return rock;
-    }
-
-    createBoundaries() {
-        // 创建边界防止玩家离开游戏区域
-        const wallGeometry = new THREE.BoxGeometry(100, 10, 2);
-        const wallMaterial = new THREE.MeshStandardMaterial({ 
-            color: 0x8B4513,
-            roughness: 1,
-            metalness: 0
-        });
-        
-        // 北墙
-        const northWall = new THREE.Mesh(wallGeometry, wallMaterial);
-        northWall.position.set(0, 5, -50);
-        northWall.castShadow = true;
-        northWall.receiveShadow = true;
-        this.scene.add(northWall);
-        
-        // 南墙
-        const southWall = new THREE.Mesh(wallGeometry, wallMaterial);
-        southWall.position.set(0, 5, 50);
-        southWall.castShadow = true;
-        southWall.receiveShadow = true;
-        this.scene.add(southWall);
-        
-        // 东墙
-        const eastWall = new THREE.Mesh(wallGeometry, wallMaterial);
-        eastWall.rotation.y = Math.PI / 2;
-        eastWall.position.set(50, 5, 0);
-        eastWall.castShadow = true;
-        eastWall.receiveShadow = true;
-        this.scene.add(eastWall);
-        
-        // 西墙
-        const westWall = new THREE.Mesh(wallGeometry, wallMaterial);
-        westWall.rotation.y = Math.PI / 2;
-        westWall.position.set(-50, 5, 0);
-        westWall.castShadow = true;
-        westWall.receiveShadow = true;
-        this.scene.add(westWall);
     }
 } 

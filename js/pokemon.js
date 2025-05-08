@@ -4,7 +4,7 @@ class PokemonManager {
         this.scene = scene;
         this.pokemons = [];
         this.activePokemons = []; // 改为数组，支持多个活跃宝可梦
-        this.maxActivePokemons = 10; // 最大同时显示的宝可梦数量
+        this.maxActivePokemons = 20; // 将最大同时显示的宝可梦数量从10增加到20
         this.pokemonData = [
             // 第一世代 - 御三家及其进化链
             { id: 1, name: "妙蛙种子", model: "models/bulbasaur.glb", scale: 0.5, color: 0x7CFC00 },
@@ -17,68 +17,43 @@ class PokemonManager {
             { id: 8, name: "卡咪龟", model: "models/wartortle.glb", scale: 0.6, color: 0x4169E1 },
             { id: 9, name: "水箭龟", model: "models/blastoise.glb", scale: 0.7, color: 0x000080 },
 
-            // 常见宝可梦
+            // 常见宝可梦 - 移除了没有真实模型的宝可梦
             { id: 10, name: "绿毛虫", model: "models/caterpie.glb", scale: 0.3, color: 0x90EE90 },
             { id: 11, name: "铁甲蛹", model: "models/metapod.glb", scale: 0.3, color: 0x006400 },
-            { id: 12, name: "巴大蝶", model: "models/butterfree.glb", scale: 0.5, color: 0x9370DB },
             { id: 13, name: "独角虫", model: "models/weedle.glb", scale: 0.3, color: 0x8B4513 },
             { id: 14, name: "铁壳蛹", model: "models/kakuna.glb", scale: 0.3, color: 0xDAA520 },
-            { id: 15, name: "大针蜂", model: "models/beedrill.glb", scale: 0.5, color: 0xFFD700 },
-
-            // 飞行系
-            { id: 16, name: "波波", model: "models/pidgey.glb", scale: 0.4, color: 0xDEB887 },
-            { id: 17, name: "比比鸟", model: "models/pidgeotto.glb", scale: 0.5, color: 0xD2B48C },
-            { id: 18, name: "大比鸟", model: "models/pidgeot.glb", scale: 0.6, color: 0xBC8F8F },
-            { id: 19, name: "小拉达", model: "models/rattata.glb", scale: 0.3, color: 0x800080 },
-            { id: 20, name: "拉达", model: "models/raticate.glb", scale: 0.4, color: 0x4B0082 },
 
             // 电系家族
             { id: 25, name: "皮卡丘", model: "models/pikachu.glb", scale: 0.4, color: 0xFFD700 },
             { id: 26, name: "雷丘", model: "models/raichu.glb", scale: 0.5, color: 0xFFA500 },
             
-            // 其他常见宝可梦
-            { id: 27, name: "穿山鼠", model: "models/sandshrew.glb", scale: 0.4, color: 0xF4A460 },
-            { id: 28, name: "穿山王", model: "models/sandslash.glb", scale: 0.5, color: 0xD2691E },
-            { id: 29, name: "尼多兰", model: "models/nidoran-f.glb", scale: 0.4, color: 0xFFB6C1 },
-            { id: 30, name: "尼多娜", model: "models/nidorina.glb", scale: 0.5, color: 0xFF69B4 },
-            { id: 31, name: "尼多后", model: "models/nidoqueen.glb", scale: 0.6, color: 0xDB7093 },
-            { id: 32, name: "尼多朗", model: "models/nidoran-m.glb", scale: 0.4, color: 0x6495ED },
-            { id: 33, name: "尼多力诺", model: "models/nidorino.glb", scale: 0.5, color: 0x4682B4 },
-            { id: 34, name: "尼多王", model: "models/nidoking.glb", scale: 0.6, color: 0x483D8B },
-
-            // 妖精系
-            { id: 35, name: "皮皮", model: "models/clefairy.glb", scale: 0.4, color: 0xFFB6C1 },
-            { id: 36, name: "皮可西", model: "models/clefable.glb", scale: 0.5, color: 0xFF69B4 },
-            { id: 37, name: "六尾", model: "models/vulpix.glb", scale: 0.4, color: 0xFFA07A },
-            { id: 38, name: "九尾", model: "models/ninetales.glb", scale: 0.6, color: 0xFFDAB9 },
-
             // 特殊进化链
             { id: 133, name: "伊布", model: "models/eevee.glb", scale: 0.4, color: 0xA0522D },
             { id: 134, name: "水伊布", model: "models/vaporeon.glb", scale: 0.5, color: 0x4169E1 },
             { id: 135, name: "雷伊布", model: "models/jolteon.glb", scale: 0.5, color: 0xFFFF00 },
             { id: 136, name: "火伊布", model: "models/flareon.glb", scale: 0.5, color: 0xFF4500 },
 
-            // 传说中的宝可梦
-            { id: 144, name: "急冻鸟", model: "models/articuno.glb", scale: 0.7, color: 0x87CEEB },
-            { id: 145, name: "闪电鸟", model: "models/zapdos.glb", scale: 0.7, color: 0xFFD700 },
-            { id: 146, name: "火焰鸟", model: "models/moltres.glb", scale: 0.7, color: 0xFF4500 },
+            // 传说中的宝可梦 - 只保留有真实模型的
             { id: 147, name: "迷你龙", model: "models/dratini.glb", scale: 0.4, color: 0x4169E1 },
             { id: 148, name: "哈克龙", model: "models/dragonair.glb", scale: 0.6, color: 0x000080 },
-            { id: 149, name: "快龙", model: "models/dragonite.glb", scale: 0.8, color: 0xFFA500 },
-            { id: 150, name: "超梦", model: "models/mewtwo.glb", scale: 0.8, color: 0x800080 },
+            { id: 150, name: "超梦", model: "models/mewtwo.glb", scale: 0.7, color: 0x800080 },
             { id: 151, name: "梦幻", model: "models/mew.glb", scale: 0.4, color: 0xFFB6C1 },
 
-            // 额外的常见宝可梦
+            // 额外的常见宝可梦 - 只保留有真实模型的
             { id: 39, name: "胖丁", model: "models/jigglypuff.glb", scale: 0.4, color: 0xFFC0CB },
             { id: 40, name: "胖可丁", model: "models/wigglytuff.glb", scale: 0.5, color: 0xFF69B4 },
-            { id: 41, name: "超音蝠", model: "models/zubat.glb", scale: 0.4, color: 0x483D8B },
-            { id: 42, name: "大嘴蝠", model: "models/golbat.glb", scale: 0.5, color: 0x4B0082 },
             { id: 43, name: "走路草", model: "models/oddish.glb", scale: 0.3, color: 0x32CD32 },
             { id: 44, name: "臭臭花", model: "models/gloom.glb", scale: 0.4, color: 0x228B22 },
-            { id: 45, name: "霸王花", model: "models/vileplume.glb", scale: 0.5, color: 0x006400 }
+            { id: 45, name: "霸王花", model: "models/vileplume.glb", scale: 0.5, color: 0x006400 },
+            
+            // 添加新的可用宝可梦
+            { id: 495, name: "藤蛇", model: "models/snivy.glb", scale: 0.5, color: 0x32CD32 },
+            { id: 587, name: "电飞鼠", model: "models/emolga.glb", scale: 0.4, color: 0xFFD700 },
+            { id: 674, name: "顽皮熊猫", model: "models/pancham.glb", scale: 0.4, color: 0x808080 },
+            { id: 696, name: "宝宝暴龙", model: "models/tyrunt.glb", scale: 0.6, color: 0xA52A2A }
         ];
         
-        this.spawnInterval = 5000; // 缩短生成间隔到5秒
+        this.spawnInterval = 3000; // 将生成间隔从5秒减少到3秒
         this.lastSpawnTime = Date.now();
         
         this.loadPokemons();
@@ -240,29 +215,19 @@ class PokemonManager {
             return;
         }
         
-        // 随机位置，确保宝可梦分散在不同区域
-        // 将地图分成4个象限，每个象限生成约相等数量的宝可梦
-        const quadrant = Math.floor(Math.random() * 4);
-        let x, z;
-        
-        switch (quadrant) {
-            case 0: // 左上
-                x = -35 + Math.random() * 30;
-                z = -35 + Math.random() * 30;
-                break;
-            case 1: // 右上
-                x = 5 + Math.random() * 30;
-                z = -35 + Math.random() * 30;
-                break;
-            case 2: // 左下
-                x = -35 + Math.random() * 30;
-                z = 5 + Math.random() * 30;
-                break;
-            case 3: // 右下
-                x = 5 + Math.random() * 30;
-                z = 5 + Math.random() * 30;
-                break;
+        // 获取场景中存在的相机（玩家位置）
+        const camera = this.scene.getObjectByProperty('type', 'PerspectiveCamera');
+        let playerPosition = new THREE.Vector3(0, 0, 0);
+        if (camera) {
+            playerPosition = camera.position.clone();
         }
+        
+        // 在玩家周围的一定范围内随机生成宝可梦
+        const distance = 30 + Math.random() * 30; // 减少距离为30-60单位（原来是60-90单位）
+        const angle = Math.random() * Math.PI * 2; // 随机角度
+        
+        const x = playerPosition.x + Math.cos(angle) * distance;
+        const z = playerPosition.z + Math.sin(angle) * distance;
         
         // 生成宝可梦
         pokemon.spawn(x, z);
@@ -382,11 +347,25 @@ class Pokemon {
             this.model.rotation.y = angle;
         }
         
-        // 边界检查
-        const position = this.model.position;
-        if (position.x < -45 || position.x > 45 || position.z < -45 || position.z > 45) {
-            // 如果宝可梦接近边界，改变方向
-            this.setRandomDirection(true);
+        // 获取场景中存在的相机（玩家位置）
+        const camera = this.scene.getObjectByProperty('type', 'PerspectiveCamera');
+        if (camera) {
+            const distanceToPlayer = this.model.position.distanceTo(camera.position);
+            
+            // 如果宝可梦距离玩家太远，则消失并在附近重新生成
+            if (distanceToPlayer > 200) {
+                this.despawn();
+                
+                // 通知管理器这个宝可梦需要重新生成
+                const manager = this.scene.userData.pokemonManager;
+                if (manager) {
+                    const index = manager.activePokemons.indexOf(this);
+                    if (index !== -1) {
+                        manager.activePokemons.splice(index, 1);
+                        manager.spawnRandomPokemon();
+                    }
+                }
+            }
         }
     }
     
