@@ -38,7 +38,7 @@
 ## 在线游玩
 
 你可以访问以下链接在线游玩这个游戏:
-[3D宝可梦世界](https://你的用户名.github.io/pokemon_gemini/)
+[3D宝可梦世界](https://yoyoka123.github.io/pokemon_gemini/)
 
 ## 项目结构
 
