@@ -20,55 +20,28 @@ class PokemonManager {
             // 常见宝可梦 - 移除了没有真实模型的宝可梦
             { id: 10, name: "绿毛虫", model: "models/caterpie.glb", scale: 0.3, color: 0x90EE90 },
             { id: 11, name: "铁甲蛹", model: "models/metapod.glb", scale: 0.3, color: 0x006400 },
-            // 巴大蝶 - 移除，没有真实模型
             { id: 13, name: "独角虫", model: "models/weedle.glb", scale: 0.3, color: 0x8B4513 },
             { id: 14, name: "铁壳蛹", model: "models/kakuna.glb", scale: 0.3, color: 0xDAA520 },
-            // 大针蜂 - 移除，没有真实模型
-
-            // 移除所有飞行系宝可梦，因为没有真实模型
-            // 波波、比比鸟、大比鸟已移除
-            
-            { id: 19, name: "小拉达", model: "models/rattata.glb", scale: 0.3, color: 0x800080 },
-            { id: 20, name: "拉达", model: "models/raticate.glb", scale: 0.4, color: 0x4B0082 },
 
             // 电系家族
             { id: 25, name: "皮卡丘", model: "models/pikachu.glb", scale: 0.4, color: 0xFFD700 },
             { id: 26, name: "雷丘", model: "models/raichu.glb", scale: 0.5, color: 0xFFA500 },
             
-            // 其他常见宝可梦
-            { id: 27, name: "穿山鼠", model: "models/sandshrew.glb", scale: 0.4, color: 0xF4A460 },
-            { id: 28, name: "穿山王", model: "models/sandslash.glb", scale: 0.5, color: 0xD2691E },
-            { id: 29, name: "尼多兰", model: "models/nidoran-f.glb", scale: 0.4, color: 0xFFB6C1 },
-            { id: 30, name: "尼多娜", model: "models/nidorina.glb", scale: 0.5, color: 0xFF69B4 },
-            { id: 31, name: "尼多后", model: "models/nidoqueen.glb", scale: 0.6, color: 0xDB7093 },
-            { id: 32, name: "尼多朗", model: "models/nidoran-m.glb", scale: 0.4, color: 0x6495ED },
-            { id: 33, name: "尼多力诺", model: "models/nidorino.glb", scale: 0.5, color: 0x4682B4 },
-            { id: 34, name: "尼多王", model: "models/nidoking.glb", scale: 0.6, color: 0x483D8B },
-
-            // 妖精系
-            { id: 35, name: "皮皮", model: "models/clefairy.glb", scale: 0.4, color: 0xFFB6C1 },
-            { id: 36, name: "皮可西", model: "models/clefable.glb", scale: 0.5, color: 0xFF69B4 },
-            { id: 37, name: "六尾", model: "models/vulpix.glb", scale: 0.4, color: 0xFFA07A },
-            { id: 38, name: "九尾", model: "models/ninetales.glb", scale: 0.6, color: 0xFFDAB9 },
-
             // 特殊进化链
             { id: 133, name: "伊布", model: "models/eevee.glb", scale: 0.4, color: 0xA0522D },
             { id: 134, name: "水伊布", model: "models/vaporeon.glb", scale: 0.5, color: 0x4169E1 },
             { id: 135, name: "雷伊布", model: "models/jolteon.glb", scale: 0.5, color: 0xFFFF00 },
             { id: 136, name: "火伊布", model: "models/flareon.glb", scale: 0.5, color: 0xFF4500 },
 
-            // 传说中的宝可梦 - 移除没有真实模型的宝可梦
-            // 急冻鸟、闪电鸟、火焰鸟已移除
+            // 传说中的宝可梦 - 只保留有真实模型的
             { id: 147, name: "迷你龙", model: "models/dratini.glb", scale: 0.4, color: 0x4169E1 },
             { id: 148, name: "哈克龙", model: "models/dragonair.glb", scale: 0.6, color: 0x000080 },
-            // 快龙已移除，没有真实模型
-            { id: 150, name: "超梦", model: "models/mewtwo.glb", scale: 0.8, color: 0x800080 },
+            { id: 150, name: "超梦", model: "models/mewtwo.glb", scale: 0.7, color: 0x800080 },
             { id: 151, name: "梦幻", model: "models/mew.glb", scale: 0.4, color: 0xFFB6C1 },
 
-            // 额外的常见宝可梦
+            // 额外的常见宝可梦 - 只保留有真实模型的
             { id: 39, name: "胖丁", model: "models/jigglypuff.glb", scale: 0.4, color: 0xFFC0CB },
             { id: 40, name: "胖可丁", model: "models/wigglytuff.glb", scale: 0.5, color: 0xFF69B4 },
-            // 超音蝠、大嘴蝠已移除，没有真实模型
             { id: 43, name: "走路草", model: "models/oddish.glb", scale: 0.3, color: 0x32CD32 },
             { id: 44, name: "臭臭花", model: "models/gloom.glb", scale: 0.4, color: 0x228B22 },
             { id: 45, name: "霸王花", model: "models/vileplume.glb", scale: 0.5, color: 0x006400 },
@@ -76,7 +49,7 @@ class PokemonManager {
             // 添加新的可用宝可梦
             { id: 495, name: "藤蛇", model: "models/snivy.glb", scale: 0.5, color: 0x32CD32 },
             { id: 587, name: "电飞鼠", model: "models/emolga.glb", scale: 0.4, color: 0xFFD700 },
-            { id: 674, name: "顽皮熊猫", model: "models/pancham.glb", scale: 0.5, color: 0x808080 },
+            { id: 674, name: "顽皮熊猫", model: "models/pancham.glb", scale: 0.4, color: 0x808080 },
             { id: 696, name: "宝宝暴龙", model: "models/tyrunt.glb", scale: 0.6, color: 0xA52A2A }
         ];
         
