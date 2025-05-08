@@ -38,6 +38,9 @@ class Game {
         
         // 将宝可梦管理器添加到场景的userData中，以便Pokemon实例可以访问
         this.scene.userData.pokemonManager = this.pokemonManager;
+        // 将相机和玩家对象添加到场景的userData中，以便PokemonManager可以访问
+        this.scene.userData.camera = this.camera;
+        this.scene.userData.player = this.player;
         
         this.bag = new Bag();
 
