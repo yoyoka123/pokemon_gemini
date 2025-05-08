@@ -53,8 +53,9 @@ class PokemonManager {
             { id: 696, name: "宝宝暴龙", model: "models/tyrunt.glb", scale: 0.6, color: 0xA52A2A }
         ];
         
-        this.spawnInterval = 3000; // 将生成间隔从5秒减少到3秒
+        this.spawnInterval = 1000; // 将生成间隔从3秒减少到1秒
         this.lastSpawnTime = Date.now();
+        this.spawnBatchSize = 3; // 每次刷新生成3只宝可梦
         
         this.loadPokemons();
         
@@ -144,6 +145,7 @@ class PokemonManager {
         
         console.log(`需要生成 ${missingCount} 只宝可梦来填充池`);
         
+        // 分批生成宝可梦，每批最多生成spawnBatchSize只
         for (let i = 0; i < missingCount; i++) {
             if (this.pokemons.length > 0) {
                 this.spawnRandomPokemon();
@@ -191,7 +193,11 @@ class PokemonManager {
         // 检查是否需要生成新的宝可梦
         const currentTime = Date.now();
         if (currentTime - this.lastSpawnTime > this.spawnInterval && this.activePokemons.length < this.maxActivePokemons) {
-            this.spawnRandomPokemon();
+            // 批量生成多只宝可梦
+            const spawnCount = Math.min(this.spawnBatchSize, this.maxActivePokemons - this.activePokemons.length);
+            for (let i = 0; i < spawnCount; i++) {
+                this.spawnRandomPokemon();
+            }
             this.lastSpawnTime = currentTime;
         }
         
