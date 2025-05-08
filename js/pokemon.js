@@ -4,7 +4,7 @@ class PokemonManager {
         this.scene = scene;
         this.pokemons = [];
         this.activePokemons = []; // 改为数组，支持多个活跃宝可梦
-        this.maxActivePokemons = 20; // 将最大同时显示的宝可梦数量从10增加到20
+        this.maxActivePokemons = 100; // 将最大同时显示的宝可梦数量从20增加到100
         this.pokemonData = [
             // 第一世代 - 御三家及其进化链
             { id: 1, name: "妙蛙种子", model: "models/bulbasaur.glb", scale: 0.5, color: 0x7CFC00 },
@@ -83,6 +83,7 @@ class PokemonManager {
                 (gltf) => {
                     console.log(`成功加载宝可梦模型: ${data.name}`);
                     
+                    // 创建模板宝可梦，但不添加到场景中
                     const pokemon = new Pokemon(
                         data.id,
                         data.name,
@@ -90,7 +91,8 @@ class PokemonManager {
                         data.scale,
                         this.scene,
                         false,
-                        data.color
+                        data.color,
+                        true // 新增参数表示这是一个模板，不会自动添加到场景
                     );
                     
                     this.pokemons.push(pokemon);
@@ -112,7 +114,8 @@ class PokemonManager {
                         data.scale,
                         this.scene,
                         true,
-                        data.color
+                        data.color,
+                        true // 新增参数表示这是一个模板，不会自动添加到场景
                     );
                     
                     this.pokemons.push(pokemon);
@@ -191,7 +194,8 @@ class PokemonManager {
         // 检查是否需要生成新的宝可梦
         const currentTime = Date.now();
         if (currentTime - this.lastSpawnTime > this.spawnInterval && this.activePokemons.length < this.maxActivePokemons) {
-            this.spawnRandomPokemon();
+            // 每次刷新时在玩家周围批量生成多个宝可梦
+            this.spawnMultiplePokemons(5);
             this.lastSpawnTime = currentTime;
         }
         
@@ -202,39 +206,14 @@ class PokemonManager {
     }
     
     spawnRandomPokemon() {
-        if (this.pokemons.length === 0) return;
-        
-        // 随机选择一个宝可梦
-        const randomIndex = Math.floor(Math.random() * this.pokemons.length);
-        const pokemon = this.pokemons[randomIndex];
-        
-        // 确保宝可梦当前不是活跃状态
-        if (this.activePokemons.includes(pokemon)) {
-            // 如果随机选择的宝可梦已经是活跃的，则尝试另一个
-            this.spawnRandomPokemon();
-            return;
-        }
-        
-        // 获取场景中存在的相机（玩家位置）
         const camera = this.scene.getObjectByProperty('type', 'PerspectiveCamera');
         let playerPosition = new THREE.Vector3(0, 0, 0);
         if (camera) {
             playerPosition = camera.position.clone();
         }
         
-        // 在玩家周围的一定范围内随机生成宝可梦
-        const distance = 30 + Math.random() * 30; // 减少距离为30-60单位（原来是60-90单位）
         const angle = Math.random() * Math.PI * 2; // 随机角度
-        
-        const x = playerPosition.x + Math.cos(angle) * distance;
-        const z = playerPosition.z + Math.sin(angle) * distance;
-        
-        // 生成宝可梦
-        pokemon.spawn(x, z);
-        this.activePokemons.push(pokemon);
-        
-        console.log(`生成宝可梦: ${pokemon.name} 在位置 (${x.toFixed(2)}, ${z.toFixed(2)})`);
-        console.log(`当前活跃宝可梦数量: ${this.activePokemons.length}`);
+        this.spawnRandomPokemonAt(playerPosition, angle);
     }
     
     // 获取所有活跃宝可梦
@@ -264,15 +243,102 @@ class PokemonManager {
             console.log(`移除宝可梦: ${pokemon.name}`);
             console.log(`剩余活跃宝可梦数量: ${this.activePokemons.length}`);
             
-            // 立即生成一个新的宝可梦
-            this.spawnRandomPokemon();
+            // 不再立即生成新的宝可梦，由update方法控制生成
         }
+    }
+    
+    // 批量生成宝可梦的方法
+    spawnMultiplePokemons(count = 5) {
+        const camera = this.scene.getObjectByProperty('type', 'PerspectiveCamera');
+        let playerPosition = new THREE.Vector3(0, 0, 0);
+        if (camera) {
+            playerPosition = camera.position.clone();
+        }
+        
+        console.log(`在玩家位置 (${playerPosition.x.toFixed(2)}, ${playerPosition.z.toFixed(2)}) 周围批量生成 ${count} 只宝可梦`);
+        
+        // 在不同的区域生成宝可梦
+        for (let i = 0; i < count; i++) {
+            if (this.activePokemons.length < this.maxActivePokemons) {
+                // 每个区域分配不同的角度范围
+                const sectorAngle = (Math.PI * 2) / count;
+                const baseAngle = i * sectorAngle;
+                const angle = baseAngle + (Math.random() * sectorAngle * 0.8); // 在区域内随机
+                
+                this.spawnRandomPokemonAt(playerPosition, angle);
+            } else {
+                console.log("已达到最大宝可梦数量限制");
+                break;
+            }
+        }
+    }
+    
+    // 在指定位置和角度生成宝可梦
+    spawnRandomPokemonAt(position, angle) {
+        if (this.pokemons.length === 0) return;
+        
+        // 随机选择一个宝可梦，增加多样性
+        // 优先选择数量较少的宝可梦类型
+        const typeCount = {};
+        
+        // 统计当前活跃的各类宝可梦数量
+        for (const pokemon of this.activePokemons) {
+            if (!typeCount[pokemon.id]) {
+                typeCount[pokemon.id] = 1;
+            } else {
+                typeCount[pokemon.id]++;
+            }
+        }
+        
+        // 给予稀有种类更高概率
+        let candidates = [...this.pokemons];
+        candidates.sort((a, b) => {
+            const countA = typeCount[a.id] || 0;
+            const countB = typeCount[b.id] || 0;
+            return countA - countB;
+        });
+        
+        // 有50%概率选择较稀有的宝可梦，50%概率完全随机选择
+        let pokemonTemplate;
+        if (Math.random() < 0.5) {
+            // 从稀有度最高的前1/3选择
+            const index = Math.floor(Math.random() * Math.max(3, Math.floor(candidates.length / 3)));
+            pokemonTemplate = candidates[index];
+        } else {
+            // 完全随机选择
+            const randomIndex = Math.floor(Math.random() * this.pokemons.length);
+            pokemonTemplate = this.pokemons[randomIndex];
+        }
+        
+        // 创建宝可梦的克隆实例
+        const pokemon = new Pokemon(
+            pokemonTemplate.id,
+            pokemonTemplate.name,
+            pokemonTemplate.model.clone(),
+            pokemonTemplate.scale,
+            this.scene,
+            pokemonTemplate.isFallback,
+            pokemonTemplate.color
+        );
+        
+        // 在玩家周围的一定范围内生成宝可梦
+        const distance = 30 + Math.random() * 30; // 30-60单位范围内
+        
+        const x = position.x + Math.cos(angle) * distance;
+        const z = position.z + Math.sin(angle) * distance;
+        
+        // 生成宝可梦
+        pokemon.spawn(x, z);
+        this.activePokemons.push(pokemon);
+        
+        console.log(`生成宝可梦: ${pokemon.name} 在位置 (${x.toFixed(2)}, ${z.toFixed(2)})`);
+        console.log(`当前活跃宝可梦数量: ${this.activePokemons.length}`);
     }
 }
 
 // 单个宝可梦类
 class Pokemon {
-    constructor(id, name, model, scale, scene, isFallback = false, color = 0xFFFFFF) {
+    constructor(id, name, model, scale, scene, isFallback = false, color = 0xFFFFFF, isTemplate = false) {
         this.id = id;
         this.name = name;
         this.model = model;
@@ -280,6 +346,7 @@ class Pokemon {
         this.scene = scene;
         this.isFallback = isFallback;
         this.color = color;
+        this.isTemplate = isTemplate;
         
         this.health = 100;
         this.isVisible = false;
