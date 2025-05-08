@@ -327,20 +327,37 @@ class PokemonManager {
             angle = Math.random() * Math.PI * 2; // 如果无法获取朝向，使用随机角度
         }
         
-        // 计算生成距离
-        const minDistance = 10;
-        const maxDistance = 25;
+        // 计算生成距离 - 减小距离以确保在可视范围内
+        const minDistance = 5;  // 从10减少到5，确保更近
+        const maxDistance = 15; // 从25减少到15，确保更近
         const distance = minDistance + Math.random() * (maxDistance - minDistance);
         
         // 计算位置
         const x = playerPosition.x + Math.cos(angle) * distance;
         const z = playerPosition.z + Math.sin(angle) * distance;
         
+        // 获取地形高度（如果有地形系统）或使用固定的Y高度
+        let y = 0.5; // 默认高度稍微增加，避免陷入地面
+        
+        if (this.debugMode) {
+            // 使用彩色标记显示宝可梦位置（调试模式）
+            const markerGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+            const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xFF0000, transparent: true, opacity: 0.7 });
+            const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+            marker.position.set(x, y + 2, z); // 位置标记放在宝可梦上方
+            this.scene.add(marker);
+            
+            // 5秒后移除标记
+            setTimeout(() => {
+                this.scene.remove(marker);
+            }, 5000);
+        }
+        
         // 生成宝可梦
-        pokemon.spawn(x, z);
+        pokemon.spawn(x, y, z);
         this.activePokemons.push(pokemon);
         
-        console.log(`在玩家前方生成宝可梦: ${pokemon.name} 在位置 (${x.toFixed(2)}, ${z.toFixed(2)})`);
+        console.log(`在玩家前方生成宝可梦: ${pokemon.name} 在位置 (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
         console.log(`当前活跃宝可梦数量: ${this.activePokemons.length}`);
     }
     
@@ -458,9 +475,9 @@ class Pokemon {
         }
     }
     
-    spawn(x, z) {
-        // 设置位置
-        this.model.position.set(x, 0, z);
+    spawn(x, y, z) {
+        // 设置位置 - 现在接受Y坐标参数
+        this.model.position.set(x, y, z);
         
         // 添加到场景
         this.scene.add(this.model);
