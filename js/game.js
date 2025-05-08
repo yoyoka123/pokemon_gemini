@@ -31,8 +31,14 @@ class Game {
         
         // 初始化世界、玩家、宝可梦和背包
         this.world = new World(this.scene);
+        this.world.createTerrain(); // 创建天空盒
+        
         this.player = new Player(this.camera, this.controls, this.scene);
         this.pokemonManager = new PokemonManager(this.scene);
+        
+        // 将宝可梦管理器添加到场景的userData中，以便Pokemon实例可以访问
+        this.scene.userData.pokemonManager = this.pokemonManager;
+        
         this.bag = new Bag();
 
         // 添加环境光和定向光
@@ -68,6 +74,9 @@ class Game {
                 loadingScreen.style.display = 'none';
             }, 500);
         }
+        
+        // 初始化世界块
+        this.world.updateChunks(this.camera.position);
     }
 
     setupEventListeners() {
@@ -140,6 +149,9 @@ class Game {
             this.player.update();
             this.pokemonManager.update();
             this.checkPokemonProximity();
+            
+            // 更新世界块
+            this.world.updateChunks(this.camera.position);
         }
         
         this.renderer.render(this.scene, this.camera);

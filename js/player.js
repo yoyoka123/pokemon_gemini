@@ -118,10 +118,10 @@ class Player {
             this.canJump = true;
         }
 
-        // 边界检查
-        const boundary = 45;
-        this.camera.position.x = Math.max(-boundary, Math.min(boundary, this.camera.position.x));
-        this.camera.position.z = Math.max(-boundary, Math.min(boundary, this.camera.position.z));
+        // 移除边界检查，允许玩家自由移动
+        // const boundary = 45;
+        // this.camera.position.x = Math.max(-boundary, Math.min(boundary, this.camera.position.x));
+        // this.camera.position.z = Math.max(-boundary, Math.min(boundary, this.camera.position.z));
     }
     
     attack() {

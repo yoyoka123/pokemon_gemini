@@ -240,29 +240,19 @@ class PokemonManager {
             return;
         }
         
-        // 随机位置，确保宝可梦分散在不同区域
-        // 将地图分成4个象限，每个象限生成约相等数量的宝可梦
-        const quadrant = Math.floor(Math.random() * 4);
-        let x, z;
-        
-        switch (quadrant) {
-            case 0: // 左上
-                x = -35 + Math.random() * 30;
-                z = -35 + Math.random() * 30;
-                break;
-            case 1: // 右上
-                x = 5 + Math.random() * 30;
-                z = -35 + Math.random() * 30;
-                break;
-            case 2: // 左下
-                x = -35 + Math.random() * 30;
-                z = 5 + Math.random() * 30;
-                break;
-            case 3: // 右下
-                x = 5 + Math.random() * 30;
-                z = 5 + Math.random() * 30;
-                break;
+        // 获取场景中存在的相机（玩家位置）
+        const camera = this.scene.getObjectByProperty('type', 'PerspectiveCamera');
+        let playerPosition = new THREE.Vector3(0, 0, 0);
+        if (camera) {
+            playerPosition = camera.position.clone();
         }
+        
+        // 在玩家周围的一定范围内随机生成宝可梦
+        const distance = 60 + Math.random() * 30; // 距离玩家60-90单位
+        const angle = Math.random() * Math.PI * 2; // 随机角度
+        
+        const x = playerPosition.x + Math.cos(angle) * distance;
+        const z = playerPosition.z + Math.sin(angle) * distance;
         
         // 生成宝可梦
         pokemon.spawn(x, z);
@@ -382,11 +372,25 @@ class Pokemon {
             this.model.rotation.y = angle;
         }
         
-        // 边界检查
-        const position = this.model.position;
-        if (position.x < -45 || position.x > 45 || position.z < -45 || position.z > 45) {
-            // 如果宝可梦接近边界，改变方向
-            this.setRandomDirection(true);
+        // 获取场景中存在的相机（玩家位置）
+        const camera = this.scene.getObjectByProperty('type', 'PerspectiveCamera');
+        if (camera) {
+            const distanceToPlayer = this.model.position.distanceTo(camera.position);
+            
+            // 如果宝可梦距离玩家太远，则消失并在附近重新生成
+            if (distanceToPlayer > 200) {
+                this.despawn();
+                
+                // 通知管理器这个宝可梦需要重新生成
+                const manager = this.scene.userData.pokemonManager;
+                if (manager) {
+                    const index = manager.activePokemons.indexOf(this);
+                    if (index !== -1) {
+                        manager.activePokemons.splice(index, 1);
+                        manager.spawnRandomPokemon();
+                    }
+                }
+            }
         }
     }
     
