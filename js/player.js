@@ -40,7 +40,7 @@ class Player {
                     break;
                 case 'Space':
                     if (this.canJump) {
-                        this.velocity.y = 10;
+                        this.velocity.y = 3.5;
                         this.canJump = false;
                     }
                     break;
@@ -106,7 +106,7 @@ class Player {
         }
 
         // 应用重力
-        this.velocity.y -= 0.1;
+        this.velocity.y -= 0.15;
 
         // 更新位置
         this.camera.position.add(this.velocity);
