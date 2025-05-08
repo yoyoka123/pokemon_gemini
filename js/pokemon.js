@@ -53,15 +53,34 @@ class PokemonManager {
             { id: 696, name: "宝宝暴龙", model: "models/tyrunt.glb", scale: 0.6, color: 0xA52A2A }
         ];
         
-        this.spawnInterval = 1000; // 将生成间隔从3秒减少到1秒
+        this.spawnInterval = 3000; // 将生成间隔从5秒减少到3秒
         this.lastSpawnTime = Date.now();
-        this.spawnBatchSize = 3; // 每次刷新生成3只宝可梦
-        this.debugMode = true; // 添加调试模式
+        
+        // 存储游戏实例的引用，用于获取相机位置
+        this.game = null;
         
         this.loadPokemons();
         
         // 添加调试信息
         console.log("宝可梦管理器初始化完成");
+    }
+    
+    // 设置游戏实例引用
+    setGame(game) {
+        this.game = game;
+        console.log("宝可梦管理器已关联游戏实例");
+    }
+    
+    // 获取玩家位置的辅助方法
+    getPlayerPosition() {
+        if (this.game && this.game.camera) {
+            // 直接从游戏实例获取相机位置
+            return this.game.camera.position.clone();
+        }
+        
+        // 若无法获取，返回原点位置
+        console.warn("无法获取玩家位置，使用默认位置(0,0,0)");
+        return new THREE.Vector3(0, 0, 0);
     }
     
     loadPokemons() {
@@ -146,7 +165,6 @@ class PokemonManager {
         
         console.log(`需要生成 ${missingCount} 只宝可梦来填充池`);
         
-        // 分批生成宝可梦，每批最多生成spawnBatchSize只
         for (let i = 0; i < missingCount; i++) {
             if (this.pokemons.length > 0) {
                 this.spawnRandomPokemon();
@@ -193,80 +211,31 @@ class PokemonManager {
     update() {
         // 检查是否需要生成新的宝可梦
         const currentTime = Date.now();
-        
-        // 获取玩家位置和朝向，用于调试
-        let playerPosition = new THREE.Vector3(0, 0, 0);
-        let playerRotation = 0;
-        
-        // 从scene.userData中获取camera对象，这是由game.js设置的
-        const camera = this.scene.userData.camera;
-        if (camera) {
-            playerPosition = camera.position.clone();
-            playerRotation = camera.rotation.y;
-            
-            // 输出玩家位置和朝向信息
-            if (this.debugMode && currentTime % 5000 < 20) { // 每5秒左右输出一次
-                console.log(`玩家位置: X=${playerPosition.x.toFixed(2)}, Y=${playerPosition.y.toFixed(2)}, Z=${playerPosition.z.toFixed(2)}, 朝向=${(playerRotation * 180 / Math.PI).toFixed(2)}度`);
-            }
-        } else {
-            console.log("警告: 无法从scene.userData获取camera对象");
-        }
-        
-        // 强制保持活跃宝可梦数量
-        if (this.activePokemons.length < this.maxActivePokemons / 2) {
-            const neededPokemons = Math.min(this.spawnBatchSize * 2, this.maxActivePokemons - this.activePokemons.length);
-            if (this.debugMode) console.log(`活跃宝可梦数量过少 (${this.activePokemons.length})，强制生成 ${neededPokemons} 只宝可梦`);
-            
-            // 强制批量生成
-            for (let i = 0; i < neededPokemons; i++) {
-                this.spawnPokemonForced(playerPosition);
-            }
-            
-            this.lastSpawnTime = currentTime;
-        }
-        // 正常的定时生成
-        else if (currentTime - this.lastSpawnTime > this.spawnInterval && this.activePokemons.length < this.maxActivePokemons) {
-            // 批量生成多只宝可梦
-            const spawnCount = Math.min(this.spawnBatchSize, this.maxActivePokemons - this.activePokemons.length);
-            if (this.debugMode) console.log(`定时生成 ${spawnCount} 只宝可梦，当前活跃: ${this.activePokemons.length}/${this.maxActivePokemons}`);
-            
-            for (let i = 0; i < spawnCount; i++) {
-                this.spawnPokemonForced(playerPosition);
-            }
+        if (currentTime - this.lastSpawnTime > this.spawnInterval && this.activePokemons.length < this.maxActivePokemons) {
+            this.spawnRandomPokemon();
             this.lastSpawnTime = currentTime;
         }
         
-        // 创建一个包含需要移除的宝可梦的数组
-        const pokemonsToRemove = [];
+        // 获取玩家位置
+        const playerPosition = this.getPlayerPosition();
         
-        // 检查宝可梦距离
-        for (let i = 0; i < this.activePokemons.length; i++) {
-            const pokemon = this.activePokemons[i];
+        // 更新所有活跃宝可梦
+        for (let pokemon of this.activePokemons) {
             pokemon.update();
             
             // 检查宝可梦是否距离玩家太远
-            if (pokemon.isVisible && pokemon.model.position.distanceTo(playerPosition) > 30) {
-                pokemonsToRemove.push(pokemon);
-            }
-        }
-        
-        // 移除远离玩家的宝可梦并在玩家周围重新生成
-        for (let pokemon of pokemonsToRemove) {
-            const index = this.activePokemons.indexOf(pokemon);
-            if (index !== -1) {
-                pokemon.despawn();
-                this.activePokemons.splice(index, 1);
+            if (pokemon.isVisible && pokemon.model.position.distanceTo(playerPosition) > 100) {
+                console.log(`宝可梦 ${pokemon.name} 太远了，将被移除并重新生成`);
+                // 移除该宝可梦
+                this.removePokemon(pokemon);
                 
-                console.log(`移除宝可梦: ${pokemon.name} (远离玩家)`);
-                
-                // 确保立即在玩家周围重新生成一只宝可梦
-                this.spawnNearPlayer(playerPosition);
+                // 在玩家周围重新生成一个新的宝可梦
+                this.spawnRandomPokemon();
             }
         }
     }
     
-    // 在玩家附近生成宝可梦的新方法
-    spawnNearPlayer(playerPosition) {
+    spawnRandomPokemon() {
         if (this.pokemons.length === 0) return;
         
         // 随机选择一个宝可梦
@@ -275,126 +244,29 @@ class PokemonManager {
         
         // 确保宝可梦当前不是活跃状态
         if (this.activePokemons.includes(pokemon)) {
-            // 尝试最多5次找到未激活的宝可梦
-            let attempts = 0;
-            let foundPokemon = false;
-            
-            while (attempts < 5 && !foundPokemon) {
-                const newIndex = Math.floor(Math.random() * this.pokemons.length);
-                const candidate = this.pokemons[newIndex];
-                
-                if (!this.activePokemons.includes(candidate)) {
-                    // 在玩家前方生成宝可梦
-                    this.spawnPokemonAtPosition(candidate, playerPosition);
-                    foundPokemon = true;
-                }
-                
-                attempts++;
-            }
-            
-            // 如果5次尝试都没找到可用的宝可梦，跳过这次生成
-            if (!foundPokemon) {
-                console.log("无法找到未激活的宝可梦，跳过生成");
-            }
-            
+            // 如果随机选择的宝可梦已经是活跃的，则尝试另一个
+            this.spawnRandomPokemon();
             return;
         }
         
-        // 在玩家前方生成宝可梦
-        this.spawnPokemonAtPosition(pokemon, playerPosition);
-    }
-    
-    // 在指定位置生成特定宝可梦
-    spawnPokemonAtPosition(pokemon, playerPosition) {
-        // 计算玩家前方的位置
-        let angle;
+        // 获取玩家位置
+        const playerPosition = this.getPlayerPosition();
         
-        // 从scene.userData中获取camera对象
-        const camera = this.scene.userData.camera;
-        
-        // 尝试通过不同方式获取玩家朝向
-        if (camera) {
-            // 方法1：从相机的rotation直接获取
-            if (camera.rotation && typeof camera.rotation.y === 'number') {
-                angle = camera.rotation.y + (Math.random() - 0.5) * Math.PI * 0.5; // 前方120度扇形范围
-                if (this.debugMode) {
-                    console.log(`使用相机rotation获取朝向: ${(camera.rotation.y * 180 / Math.PI).toFixed(2)}度, 最终角度: ${(angle * 180 / Math.PI).toFixed(2)}度`);
-                }
-            } 
-            // 方法2：使用getWorldDirection
-            else {
-                const direction = new THREE.Vector3();
-                camera.getWorldDirection(direction);
-                angle = Math.atan2(direction.x, direction.z) + (Math.random() - 0.5) * Math.PI * 0.5;
-                if (this.debugMode) {
-                    console.log(`使用getWorldDirection获取朝向: ${(Math.atan2(direction.x, direction.z) * 180 / Math.PI).toFixed(2)}度, 最终角度: ${(angle * 180 / Math.PI).toFixed(2)}度`);
-                }
-            }
-        } else {
-            angle = Math.random() * Math.PI * 2; // 如果无法获取朝向，使用随机角度
-            if (this.debugMode) {
-                console.log(`无法获取玩家朝向，使用随机角度: ${(angle * 180 / Math.PI).toFixed(2)}度`);
-            }
-        }
-        
-        // 计算生成距离
-        const minDistance = 10;
-        const maxDistance = 25;
+        // 在玩家周围的一定范围内随机生成宝可梦，确保玩家能看到
+        const minDistance = 20; // 最小距离
+        const maxDistance = 50; // 最大距离
         const distance = minDistance + Math.random() * (maxDistance - minDistance);
+        const angle = Math.random() * Math.PI * 2; // 随机角度
         
-        // 确保playerPosition是有效的Vector3对象
-        if (!playerPosition || typeof playerPosition.x !== 'number') {
-            if (this.debugMode) console.log("无效的玩家位置，使用默认位置");
-            playerPosition = new THREE.Vector3(0, 1.6, 0); // 默认玩家高度1.6
-        }
-        
-        // 计算位置 - 确保使用玩家的Y高度，默认为1.6（人眼高度）
         const x = playerPosition.x + Math.cos(angle) * distance;
-        const y = playerPosition.y !== undefined ? playerPosition.y : 1.6; // 默认玩家高度
         const z = playerPosition.z + Math.sin(angle) * distance;
         
-        if (this.debugMode) {
-            console.log(`玩家位置: (${playerPosition.x.toFixed(2)}, ${playerPosition.y.toFixed(2)}, ${playerPosition.z.toFixed(2)})`);
-            console.log(`生成宝可梦位置: (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
-        }
-        
-        // 生成宝可梦 - 更新为使用y坐标
-        pokemon.spawn(x, y, z);
+        // 生成宝可梦
+        pokemon.spawn(x, z);
         this.activePokemons.push(pokemon);
         
-        console.log(`在玩家前方生成宝可梦: ${pokemon.name} 在位置 (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
-        console.log(`当前活跃宝可梦数量: ${this.activePokemons.length}/${this.maxActivePokemons}`);
-    }
-    
-    // 强制生成宝可梦的方法 - 始终确保能找到一只可用的宝可梦
-    spawnPokemonForced(playerPosition) {
-        if (this.pokemons.length === 0) {
-            if (this.debugMode) console.log("宝可梦池为空，无法生成");
-            return;
-        }
-        
-        // 创建一个可用宝可梦候选列表（未激活的宝可梦）
-        const availablePokemon = this.pokemons.filter(p => !this.activePokemons.includes(p));
-        
-        if (availablePokemon.length === 0) {
-            if (this.debugMode) console.log("所有宝可梦都已激活，无法生成新的宝可梦");
-            return;
-        }
-        
-        // 从可用列表中随机选择一个
-        const randomIndex = Math.floor(Math.random() * availablePokemon.length);
-        const pokemon = availablePokemon[randomIndex];
-        
-        // 在玩家前方生成宝可梦
-        this.spawnPokemonAtPosition(pokemon, playerPosition);
-    }
-    
-    spawnRandomPokemon() {
-        // 使用更可靠的强制生成方法
-        const camera = this.scene.userData.camera;
-        let playerPosition = camera ? camera.position.clone() : new THREE.Vector3(0, 1.6, 0);
-        
-        this.spawnPokemonForced(playerPosition);
+        console.log(`生成宝可梦: ${pokemon.name} 在位置 (${x.toFixed(2)}, ${z.toFixed(2)}), 玩家位置: (${playerPosition.x.toFixed(2)}, ${playerPosition.z.toFixed(2)})`);
+        console.log(`当前活跃宝可梦数量: ${this.activePokemons.length}`);
     }
     
     // 获取所有活跃宝可梦
@@ -424,12 +296,8 @@ class PokemonManager {
             console.log(`移除宝可梦: ${pokemon.name}`);
             console.log(`剩余活跃宝可梦数量: ${this.activePokemons.length}`);
             
-            // 获取玩家位置 - 使用scene.userData中的camera
-            const camera = this.scene.userData.camera;
-            let playerPosition = camera ? camera.position.clone() : new THREE.Vector3(0, 1.6, 0);
-            
-            // 立即在玩家周围重新生成一个新的宝可梦
-            this.spawnNearPlayer(playerPosition);
+            // 立即生成一个新的宝可梦
+            this.spawnRandomPokemon();
         }
     }
 }
@@ -474,9 +342,9 @@ class Pokemon {
         }
     }
     
-    spawn(x, y, z) {
-        // 设置位置 - 更新为使用y坐标
-        this.model.position.set(x, y, z);
+    spawn(x, z) {
+        // 设置位置
+        this.model.position.set(x, 0, z);
         
         // 添加到场景
         this.scene.add(this.model);
