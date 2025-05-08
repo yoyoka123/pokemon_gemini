@@ -307,11 +307,24 @@ class PokemonManager {
         // 获取玩家的朝向（如果相机有朝向）
         let angle;
         const camera = this.scene.getObjectByProperty('type', 'PerspectiveCamera');
-        if (camera && camera.rotation) {
-            // 使用相机的Y轴旋转作为玩家的朝向
-            angle = camera.rotation.y + (Math.random() - 0.5) * Math.PI * 0.5; // 前方120度扇形范围
-            if (this.debugMode) {
-                console.log(`使用玩家朝向: ${(camera.rotation.y * 180 / Math.PI).toFixed(2)}度, 最终角度: ${(angle * 180 / Math.PI).toFixed(2)}度`);
+        
+        // 尝试通过不同方式获取玩家朝向
+        if (camera) {
+            // 方法1：从相机的rotation直接获取
+            if (camera.rotation && typeof camera.rotation.y === 'number') {
+                angle = camera.rotation.y + (Math.random() - 0.5) * Math.PI * 0.5; // 前方120度扇形范围
+                if (this.debugMode) {
+                    console.log(`使用相机rotation获取朝向: ${(camera.rotation.y * 180 / Math.PI).toFixed(2)}度, 最终角度: ${(angle * 180 / Math.PI).toFixed(2)}度`);
+                }
+            } 
+            // 方法2：使用getWorldDirection
+            else {
+                const direction = new THREE.Vector3();
+                camera.getWorldDirection(direction);
+                angle = Math.atan2(direction.x, direction.z) + (Math.random() - 0.5) * Math.PI * 0.5;
+                if (this.debugMode) {
+                    console.log(`使用getWorldDirection获取朝向: ${(Math.atan2(direction.x, direction.z) * 180 / Math.PI).toFixed(2)}度, 最终角度: ${(angle * 180 / Math.PI).toFixed(2)}度`);
+                }
             }
         } else {
             angle = Math.random() * Math.PI * 2; // 如果无法获取朝向，使用随机角度
@@ -325,10 +338,21 @@ class PokemonManager {
         const maxDistance = 25;
         const distance = minDistance + Math.random() * (maxDistance - minDistance);
         
-        // 计算位置 - 确保使用玩家的Y高度
+        // 确保playerPosition是有效的Vector3对象
+        if (!playerPosition || typeof playerPosition.x !== 'number') {
+            if (this.debugMode) console.log("无效的玩家位置，使用默认位置");
+            playerPosition = new THREE.Vector3(0, 1.6, 0); // 默认玩家高度1.6
+        }
+        
+        // 计算位置 - 确保使用玩家的Y高度，默认为1.6（人眼高度）
         const x = playerPosition.x + Math.cos(angle) * distance;
-        const y = playerPosition.y; // 使用玩家的高度
+        const y = playerPosition.y !== undefined ? playerPosition.y : 1.6; // 默认玩家高度
         const z = playerPosition.z + Math.sin(angle) * distance;
+        
+        if (this.debugMode) {
+            console.log(`玩家位置: (${playerPosition.x.toFixed(2)}, ${playerPosition.y.toFixed(2)}, ${playerPosition.z.toFixed(2)})`);
+            console.log(`生成宝可梦位置: (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`);
+        }
         
         // 生成宝可梦 - 更新为使用y坐标
         pokemon.spawn(x, y, z);
